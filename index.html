@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Table Tennis Side Trainer</title>
+<style>
+:root{--bg:#0d0f12;--fg:#f2f4f7;--mut:#8b93a1;--card:#1a1e24;--red:#ff2d3d;--green:#19e660;--redoff:#2a1114;--greenoff:#0f2618}
+:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none}
+#menu{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:20px;box-sizing:border-box;text-align:center}
+h1{margin:0;font-size:26px}
+p{margin:0;color:var(--mut);font-size:14px;max-width:340px}
+.lv{width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px}
+.lv button{background:var(--card);color:var(--fg);border:2px solid transparent;border-radius:14px;padding:14px;font-size:17px;text-align:left}
+.lv button small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+.lv button.sel{border-color:var(--green)}
+.opt{display:flex;gap:18px;color:var(--mut);font-size:14px}
+.go{width:100%;max-width:340px;background:var(--green);color:#04210e;border:0;border-radius:14px;padding:16px;font-size:20px;font-weight:700}
+#game{position:fixed;inset:0;display:none;flex-direction:row}
+.half{flex:1;transition:background .04s}
+#L{background:var(--redoff)}#R{background:var(--greenoff)}
+#L.on{background:var(--red)}#R.on{background:var(--green)}
+#hist{width:100%;max-width:340px;font-size:13px;color:var(--mut);text-align:left}#hist b{color:var(--fg)}#hist div{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #222}#clr{background:none;border:0;color:var(--mut);text-decoration:underline;font-size:12px}
+#menu,#learn{overflow-y:auto}#menu{justify-content:flex-start}#menu>:first-child,#learn>:first-child{margin-top:auto}#menu>:last-child,#learn>:last-child{margin-bottom:auto}
+#learn{display:none;height:100%;flex-direction:column;align-items:center;gap:12px;padding:16px;box-sizing:border-box}
+#learn>*{width:100%;max-width:520px}#learn input,#learn textarea{background:var(--card);color:var(--fg);border:1px solid #333;border-radius:10px;padding:10px;font:inherit;font-size:14px;box-sizing:border-box;-webkit-user-select:text;user-select:text}
+#learn textarea{height:120px}.sec{background:var(--card);color:var(--fg);border:0;border-radius:12px;padding:12px;font-size:15px}
+select{background:var(--card);color:var(--fg);border:1px solid #333;border-radius:8px;padding:4px}
+#out{white-space:pre-wrap;font-size:14px;line-height:1.5;-webkit-user-select:text;user-select:text}
+#last{width:100%;max-width:340px;background:var(--card);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--mut);text-align:left;display:none}#last b{color:var(--fg)}
+#bar{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 8px);display:flex;justify-content:center;gap:12px;align-items:center;pointer-events:none}
+#camwin{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 10px);width:150px;height:112px;border:3px solid #fff;border-radius:12px;overflow:hidden;background:#000;display:none;z-index:5}
+#cv{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.6)}
+#dot{position:absolute;top:55%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#fff;border:2px solid #000;left:50%;transition:left .1s}
+#cst{position:absolute;left:0;right:0;top:0;font-size:11px;text-align:center;background:rgba(0,0,0,.65);color:#fff;padding:2px 0}
+#bar span{background:rgba(0,0,0,.55);padding:6px 12px;border-radius:20px;font-size:14px}
+#stop{pointer-events:auto;background:rgba(0,0,0,.65);color:#fff;border:1px solid #666;border-radius:20px;padding:6px 16px;font-size:14px}
+</style>
+</head>
+<body>
+<div id="menu">
+  <h1>🏓 Side Trainer</h1>
+  <p>Prop your phone at a distance. <b style="color:var(--red)">Red = left</b>, <b style="color:var(--green)">Green = right</b>. Move your feet to the side that lights up.</p>
+  <div class="lv" id="lv">
+    <button data-l="0" class="sel">Normal<small>Beginner · about 1.0–1.6 s per light</small></button>
+    <button data-l="1">Intermediate<small>Faster · about 0.6–1.0 s per light</small></button>
+    <button data-l="2">Advanced<small>Fastest · about 0.35–0.65 s per light</small></button>
+    <button data-l="3">Pro Mode<small>Ultra fast · 0.22–0.45 s · repeats blink</small></button>
+  </div>
+  <div class="opt">
+    <label><input type="checkbox" id="snd" checked> Sound</label>
+    <label><input type="checkbox" id="fs" checked> Fullscreen</label>
+    <label><input type="checkbox" id="fake"> Fake-outs</label>
+  </div>
+  <div class="opt"><label><input type="checkbox" id="cam"> 📷 Camera check</label><label><input type="checkbox" id="swap"> Swap camera side</label></div>
+  <div class="opt" style="flex-direction:column;gap:6px;align-items:center"><label>Camera check response limit: <b id="limv" style="color:var(--fg)">0.90</b> s<br><input type="range" id="lim" min="0.8" max="1" step="0.05" value="0.9" style="width:260px"></label><label>Camera: <select id="camsel"><option value="user">Front</option><option value="environment">Rear</option></select></label></div>
+  <button class="go" id="start">START</button>
+  <div id="last"></div>
+  <button class="sec" id="learnBtn" style="width:100%;max-width:340px">📺 Learn from YouTube videos</button>
+  <div id="hist"></div>
+</div>
+<div id="learn">
+  <button class="sec" id="back" style="width:auto;align-self:flex-start">← Back</button>
+  <h1 style="font-size:20px">📺 Learn from a video</h1>
+  <input id="lurl" placeholder="Paste a YouTube link (match or tutorial)">
+  <button class="go" id="lload" style="max-width:none">Load video</button>
+  <div id="lplay"></div>
+  <div style="border-top:1px solid #333;padding-top:10px"><b>👀 Let the rear camera watch a match or tutorial</b>
+  <p style="max-width:none;margin:6px 0">Play the video on another screen (TV, laptop, tablet) and point the rear camera at it so the players fill the view. The app grabs frames and Claude compares the players.</p>
+  <video id="pv" playsinline muted style="width:100%;border-radius:12px;background:#000;display:none;margin-bottom:8px"></video>
+  <label style="font-size:14px;color:var(--mut)">Watch for <select id="dur"><option>15</option><option selected>30</option><option>45</option><option>60</option></select> seconds</label>
+  <button class="go" id="watch" style="max-width:none;margin-top:8px">📷 Start watching</button><div id="wst" style="font-size:13px;color:var(--mut);margin-top:6px"></div></div>
+  <p style="max-width:none">Or paste a transcript (YouTube: description → "Show transcript") or your own notes to analyse what is said in the video:</p>
+  <textarea id="ltxt" placeholder="Paste transcript or notes here…"></textarea>
+  <button class="go" id="lan" style="max-width:none">Analyse for learning</button>
+  <div id="out"></div>
+</div>
+
+<div id="game">
+  <div class="half" id="L"></div><div class="half" id="R"></div>
+  <div id="camwin"><video id="cv" playsinline muted></video><i id="mid"></i><i id="dot"></i><span id="cst">📷</span></div>
+  <div id="bar"><span id="info">0:00 · 0</span><button id="stop">Stop</button></div>
+</div>
+<script>
+const RANGES=[[1000,1600],[600,1000],[350,650],[220,450]];
+const NAMES=['Normal','Intermediate','Advanced','Pro'];
+let level=0,timer=null,last=null,streak=0,count=0,maxRun=0,t0=0,tick=null,wl=null,ac=null;
+const $=id=>document.getElementById(id);
+document.querySelectorAll('#lv button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#lv button').forEach(x=>x.classList.remove('sel'));
+  b.classList.add('sel');level=+b.dataset.l;
+});
+function beep(side){
+  if(!$('snd').checked)return;
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
+    const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;
+    o.type='square';o.frequency.value=side==='L'?300:720;
+    g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.01,t+.11);
+    o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+.12);}catch(e){}
+}
+function light(s,on){$('L').classList.toggle('on',on&&s==='L');$('R').classList.toggle('on',on&&s==='R');}
+function show(s,repeat,fake){
+  if(!fake)camMark(s);
+  if(repeat){light(s,false);setTimeout(()=>{light(s,true);beep(s);},60);} // blink on repeat
+  else{light(s,true);beep(s);}
+}
+function next(){
+  const other=x=>x==='L'?'R':'L';
+  let s=Math.random()<.5?'L':'R';
+  if(level===3&&last&&streak<3&&Math.random()<.45)s=last; // Pro: favour 2-3 repeats
+  const cap=level===3?3:4;
+  if(s===last&&streak>=cap)s=other(s);
+  const repeat=(s===last);
+  streak=repeat?streak+1:1;last=s;count++;maxRun=Math.max(maxRun,streak);
+  let delay=0;
+  if($('fake').checked&&Math.random()<.22){        // fake-out: wrong side flashes first
+    const f=other(s);show(f,false,1);delay=level>=2?90:130;
+    setTimeout(()=>{light(f,false);},delay);delay+=45;
+    setTimeout(()=>show(s,false),delay);
+  }else show(s,repeat);
+  const [a,b]=RANGES[level];
+  timer=setTimeout(next,delay+a+Math.random()*(b-a));
+}
+async function start(){
+  if($('cam').checked)await camStart();
+  $('menu').style.display='none';$('game').style.display='flex';
+  count=0;last=null;streak=0;maxRun=0;t0=Date.now();
+  try{if($('fs').checked&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();}catch(e){}
+  try{if(navigator.wakeLock)wl=await navigator.wakeLock.request('screen');}catch(e){}
+  tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);
+    $('info').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+' · '+count;},500);
+  setTimeout(next,1200);
+}
+function load(){try{return JSON.parse(localStorage.getItem('tt_hist')||'[]');}catch(e){return [];}}
+function save(r){try{const h=load();h.unshift(r);localStorage.setItem('tt_hist',JSON.stringify(h.slice(0,200)));}catch(e){}}
+function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function render(){
+  const h=load(),el=$('hist');
+  if(!h.length){el.innerHTML='';return;}
+  const tl=h.reduce((a,r)=>a+r.lights,0),tt=h.reduce((a,r)=>a+r.secs,0),best=Math.max(...h.map(r=>r.run));
+  el.innerHTML='<div><span><b>'+h.length+'</b> sessions</span><span><b>'+tl+'</b> lights</span><span><b>'+fmt(tt)+'</b> total</span><span>best run <b>'+best+'</b></span></div>'+
+   h.slice(0,5).map(r=>'<div><span>'+r.date+'</span><span>'+r.level+(r.fake?' +fake':'')+'</span><span>'+fmt(r.secs)+'</span><span>'+r.lights+' lights · run '+r.run+(r.acc!=null?' · '+r.acc+'%':'')+'</span></div>').join('')+
+   '<div style="border:0;justify-content:center"><button id="clr">Clear history</button></div>';
+  $('clr').onclick=()=>{try{localStorage.removeItem('tt_hist');}catch(e){}render();};
+}
+function stop(){
+  clearTimeout(timer);clearInterval(tick);
+  const secs=Math.floor((Date.now()-t0)/1000);
+  const an=camStop();$('camwin').style.display='none';
+  if(count>1)save({acc:an?an.acc:null,date:new Date().toLocaleDateString(undefined,{day:'numeric',month:'short'}),level:NAMES[level],fake:$('fake').checked,secs,lights:count,run:maxRun});
+  light('L',false);
+  const lb=$('last');
+  if(an)lb.innerHTML='<b>Camera check:</b> followed the light '+'<b>'+an.acc+'%</b> of the time · median reaction <b>'+(an.rt!=null?an.rt+' ms':'n/a')+'</b><br>Left (red) '+an.L+'% · Right (green) '+an.R+'%'+(an.still?'<br>⚠ Very little movement was seen. Check the camera angle and lighting.':'')+'<br>Compare this % with your earlier sessions to track progress.';
+  else lb.innerHTML=cam.note;
+  lb.style.display=lb.innerHTML?'block':'none';
+  $('game').style.display='none';$('menu').style.display='flex';render();
+  try{if(wl)wl.release();}catch(e){}
+  try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}
+}
+
+// ---- camera check: on-device motion tracking, nothing leaves the phone ----
+const cam={on:false,res:[],cur:null,pos:.5,prev:null,moves:0,note:''};
+const cvs=document.createElement('canvas');cvs.width=48;cvs.height=36;
+const cx=cvs.getContext('2d',{willReadFrequently:true});
+async function camStart(){
+  cam.res=[];cam.cur=null;cam.pos=.5;cam.prev=null;cam.moves=0;cam.note='';
+  try{
+    cam.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:$('camsel').value},width:320,height:240},audio:false});
+    const v=$('cv');v.srcObject=cam.stream;await v.play();cam.on=true;$('camwin').style.display='block';cam.loop=setInterval(camTick,50);
+  }catch(e){cam.on=false;$('camwin').style.display='block';$('cst').textContent='Camera blocked';cam.note='Camera unavailable (permission denied or blocked here), so only lights ran.';}
+}
+function camTick(){
+  const v=$('cv');if(v.readyState<2)return;
+  cx.drawImage(v,0,0,48,36);const d=cx.getImageData(0,0,48,36).data,g=new Float32Array(1728);
+  for(let i=0;i<1728;i++)g[i]=d[i*4]*.3+d[i*4+1]*.59+d[i*4+2]*.11;
+  if(cam.prev){let sw=0,sx=0;
+    for(let i=0;i<1728;i++){const df=Math.abs(g[i]-cam.prev[i]);if(df>18){sw+=df;sx+=df*(i%48);}}
+    if(sw>1500){cam.moves++;cam.lm=performance.now();const raw=sx/sw/47,m=$('swap').checked?raw:1-raw;cam.pos=cam.pos*.6+m*.4;}
+  }
+  cam.prev=g;camUI();
+  const c=cam.cur;
+  if(c&&!c.done){const el=performance.now()-c.t,lim=+$('lim').value*1000;
+    if(c.side==='L'?cam.pos<.42:cam.pos>.58){c.done=true;if(el<=lim)c.rt=Math.round(el);}   // late arrival = miss
+    else if(el>lim)c.done=true;}
+}
+function camUI(){
+  const p=cam.pos,side=p<.42?'Left':p>.58?'Right':'Centre',c=cam.cur;
+  $('dot').style.left=(p*100)+'%';$('dot').style.background=p<.42?'#ff2d3d':p>.58?'#19e660':'#fff';
+  $('cst').textContent=cam.moves?'📷 You: '+side:'📷 Looking for movement…';
+  $('camwin').style.borderColor=c?(c.done?(c.rt!=null?'#19e660':'#ff2d3d'):'#ffc400'):'#fff';
+}
+function camMark(s){
+  if(!cam.on)return;
+  if(cam.cur)cam.res.push(cam.cur);
+  cam.cur={side:s,t:performance.now(),done:false,rt:null};
+}
+function camStop(){
+  if(!cam.on)return null;
+  clearInterval(cam.loop);cam.on=false;
+  try{cam.stream.getTracks().forEach(t=>t.stop());}catch(e){}
+  if(cam.cur)cam.res.push(cam.cur);cam.cur=null;
+  const r=cam.res,n=r.length;if(n<3)return null;
+  const hit=r.filter(x=>x.rt!=null),rts=hit.map(x=>x.rt).sort((a,b)=>a-b);
+  const side=k=>{const a=r.filter(x=>x.side===k);return a.length?Math.round(100*a.filter(x=>x.rt!=null).length/a.length):0;};
+  return {n,acc:Math.round(100*hit.length/n),rt:rts.length?rts[Math.floor(rts.length/2)]:null,L:side('L'),R:side('R'),still:cam.moves<10};
+}
+// ---- Learn tab ----
+const ytId=u=>{const m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/);return m&&m[1];};
+$('learnBtn').onclick=()=>{$('menu').style.display='none';$('learn').style.display='flex';};
+$('back').onclick=()=>{$('learn').style.display='none';$('menu').style.display='flex';};
+$('lload').onclick=()=>{
+  const id=ytId($('lurl').value.trim());
+  if(!id){$('lplay').textContent='Please paste a valid YouTube link.';return;}
+  $('lplay').innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'" allow="fullscreen; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#000"></iframe><p style="max-width:none;margin-top:6px">If the video doesn\u2019t appear here, <a style="color:var(--green)" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v='+id+'">open it on YouTube</a>.</p>';
+};
+$('lan').onclick=async()=>{
+  const out=$('out'),t=$('ltxt').value.trim();
+  if(t.length<40){out.textContent='Paste a transcript or some notes first (at least a few sentences).';return;}
+  let sample=null;try{sample=await claude.use('sample');}catch(e){}
+  if(!sample){out.textContent='AI analysis isn\u2019t available in this view. Open the app through its claude.ai link while signed in.';return;}
+  out.textContent='Analysing\u2026';
+  const p='You are an expert table tennis coach helping an intermediate player who trains side-to-side anticipation and footwork with a light-based reaction app (red=left, green=right; levels Normal, Intermediate, Advanced, Pro; optional fake-outs).\nAnalyse this table tennis video from a learning perspective, using the transcript/notes below. Reply in plain text with short headings: 1) Summary 2) Key techniques & concepts 3) Common mistakes to avoid 4) Three practice drills 5) How to use the app for this (which level, fake-outs on/off, session length). Be concrete and concise. If the material is thin, say what is unclear instead of inventing details.\n\nVideo: '+$('lurl').value.trim()+'\n\nTranscript/notes:\n'+t.slice(0,12000);
+  try{await sample(p,{cache:false,onText:({text})=>{out.textContent=text;}});}
+  catch(e){out.textContent='Analysis failed ('+(e&&e.code||'error')+'). Please try again in a moment.';}
+};
+
+$('lim').oninput=()=>{$('limv').textContent=(+$('lim').value).toFixed(2);};
+$('watch').onclick=async()=>{
+  const out=$('out'),st=$('wst'),btn=$('watch');
+  let sample=null,lm={};try{sample=await claude.use('sample');lm=await sample.limits();}catch(e){}
+  if(!sample||!lm.images){out.textContent='Visual analysis isn\u2019t available in this view. Open the app through its claude.ai link while signed in.';return;}
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false});}
+  catch(e){st.textContent='Camera unavailable (permission denied or blocked here). Try opening the link in Chrome or Safari.';return;}
+  btn.disabled=true;const v=$('pv');v.srcObject=stream;v.style.display='block';await v.play();
+  const N=20,secs=+$('dur').value,gap=secs*1000/N,c=document.createElement('canvas'),imgs=[];
+  for(let i=0;i<N;i++){
+    st.textContent='Watching\u2026 frame '+(i+1)+' of '+N+'. Keep the video playing.';
+    await new Promise(r=>setTimeout(r,i?gap:600));
+    const w=Math.min(768,v.videoWidth||768);c.width=w;c.height=Math.round(w*(v.videoHeight||432)/(v.videoWidth||768));
+    c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+    imgs.push(await new Promise(r=>c.toBlob(r,'image/jpeg',.7)));
+  }
+  stream.getTracks().forEach(t=>t.stop());v.style.display='none';
+  st.textContent='Captured '+N+' frames. Analysing\u2026';out.textContent='Analysing\u2026';
+  const p='You are an expert table tennis coach. The '+N+' images are frames captured in order, about '+(gap/1000).toFixed(1)+' s apart (total '+secs+' s), from a video of table tennis played on a screen and filmed by a phone camera. The viewer is an intermediate player who trains side-to-side anticipation and footwork. Never identify real people by their faces; refer to players by position and clothing (e.g. "near-side player in red").\nReply in plain text with short headings: 1) What is shown 2) Player-by-player observations (stance and knee bend, footwork and recovery to centre, racket and contact point, balance, anticipation cues such as watching the opponent\u2019s shoulders and racket) 3) Which player performs better and why, with specific, followable specs (e.g. approximate stance width, bat angle, recovery position) rated for each player 4) Three things I should copy 5) How to train it in my reaction app (level, fake-outs, camera check). Be honest about limits: still frames cannot measure speed or spin precisely, so say what you cannot judge.';
+  try{await sample(p,{images:imgs,cache:false,modelTier:'complex',onText:({text})=>{out.textContent=text;}});st.textContent='Done.';}
+  catch(e){out.textContent='Analysis failed ('+(e&&e.code||'error')+'). Try again in a moment.';st.textContent='';}
+  btn.disabled=false;
+};
+$('start').onclick=start;$('stop').onclick=stop;render();
+</script>
+</body>
+</html>
